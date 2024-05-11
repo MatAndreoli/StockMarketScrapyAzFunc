@@ -24,6 +24,10 @@ class FiisscrapingPipeline:
             if field == 'dividend_yield':
                 adapter[field] += '%'
             
+            if field == 'net_worth':
+                pattern = r'(</?(b|small)>)|(\s+)'
+                adapter[field] = '$ '.join(re.sub(pattern, '', adapter.get(field)).strip().split('$'))
+
             if field == 'last_dividend':
                 adapter[field] = 'R$ ' + adapter.get(field)
 
