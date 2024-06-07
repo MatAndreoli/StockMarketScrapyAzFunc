@@ -13,7 +13,7 @@ class LastManagementReport(Item):
     date = Field()
 
 
-class FiisscrapingItem(Item):
+class FiisScrapingItem(Item):
     url = Field()
     name = Field()
     fii_type = Field()
@@ -30,3 +30,19 @@ class FiisscrapingItem(Item):
     rend_distribution = Field()
     last_management_report = Field()
 
+class StockScrapingItem(Item):
+    url = Field()
+    name = Field()
+    operation_sector = Field()
+    code = Field()
+    status = Field() # last 12 months
+    current_price = Field()
+    average_daily = Field()
+    dividend_yield = Field()
+    net_worth = Field()
+    p_vp = Field()
+    p_l = Field()
+    net_debt_ebitda = Field() # dívida líquida / ebitda
+    cagr = Field()
+    roe = Field()
+    total_stock_paper = Field()

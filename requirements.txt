@@ -1,4 +1,5 @@
 azure-functions==1.19.0
-Scrapy==2.11.1
+Scrapy==2.11.2
 scrapy-fake-useragent==1.4.4
 Twisted==22.10.0
+fake-useragent==1.5.1

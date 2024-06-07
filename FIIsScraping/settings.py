@@ -72,7 +72,7 @@ FAKEUSERAGENT_PROVIDERS = [
 # Configure item pipelines
 # See https://docs.scrapy.org/en/latest/topics/item-pipeline.html
 #ITEM_PIPELINES = {
-#    "FIIsScraping.pipelines.FiisscrapingPipeline": 300,
+#    "FIIsScraping.pipelines.FiisScrapingPipeline": 300,
 #}
 
 # Enable and configure the AutoThrottle extension (disabled by default)

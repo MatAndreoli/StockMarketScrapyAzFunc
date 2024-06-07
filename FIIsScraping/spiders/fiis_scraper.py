@@ -1,9 +1,9 @@
-import tempfile
-from scrapy import Spider, Request
+from scrapy import Spider
 from scrapy.responsetypes import Response
 
-from envs import FILE_PATH
-from FIIsScraping.items import FiisscrapingItem, RendDistribution, LastManagementReport
+from envs import FIIS_FILE
+from FIIsScraping.items import (FiisScrapingItem, LastManagementReport,
+                                RendDistribution)
 
 
 class FiisScraperSpider(Spider):
@@ -12,10 +12,10 @@ class FiisScraperSpider(Spider):
     format_file = 'json'
     custom_settings = {
         'FEEDS':{
-            FILE_PATH: { 'format': format_file, 'overwrite': True}
+            FIIS_FILE: { 'format': format_file, 'overwrite': True}
         },
         'ITEM_PIPELINES': {
-            "FIIsScraping.pipelines.FiisscrapingPipeline": 300,
+            "FIIsScraping.pipelines.FiisScrapingPipeline": 300,
         }
     }
 
@@ -39,7 +39,7 @@ class FiisScraperSpider(Spider):
     def getFiiData(self, response: Response):
         fii_type = response.meta['fii_type']
 
-        fii_item = FiisscrapingItem()
+        fii_item = FiisScrapingItem()
         rend_distribution = RendDistribution()
         last_management_report = LastManagementReport()
 
@@ -75,22 +75,6 @@ class FiisScraperSpider(Spider):
         if last_management_report_el is not None:
             last_management_report['link'] = last_management_report_el[0].css('a::attr(href)').get()
             last_management_report['date'] = last_management_report_el[0].css('p::text').get()
-            fii_item['last_management_report'] = dict(last_management_report)
-        else:
-            yield response.follow(f"https://statusinvest.com.br/fiagros/{fii_item['code']}", callback=self.managementReportAbsent, meta={'fii_item': fii_item})
-            return
-
-        yield fii_item
-
-    def managementReportAbsent(self, response: Response):
-        fii_item = response.meta['fii_item']
-        last_management_report = LastManagementReport()
-
-        last_management_report_el = response.xpath("//div[contains(@class, 'align-items-center d-flex flex-wrap justify-between') and contains(div/text(), 'Gerencial')]") or None
-
-        if last_management_report_el is not None:
-            last_management_report['link'] = last_management_report_el[0].css('a::attr(href)').get()
-            last_management_report['date'] = last_management_report_el[0].css('.w-lg-10.fw-700::text').get()
             fii_item['last_management_report'] = dict(last_management_report)
 
         yield fii_item
