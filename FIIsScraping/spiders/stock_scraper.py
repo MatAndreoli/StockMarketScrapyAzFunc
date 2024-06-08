@@ -3,10 +3,9 @@ from json import loads
 
 from scrapy import Spider
 from scrapy.responsetypes import Response
-from scrapy.http import FormRequest
 
 from envs import STOCKS_FILE
-from FIIsScraping.items import StockScrapingItem, DividendItem
+from FIIsScraping.items import StockScrapingItem, DividendItem, LastManagementReport
 
 class StockScraperSpider(Spider):
     name = "stock-scraper"
@@ -64,17 +63,9 @@ class StockScraperSpider(Spider):
         stock_item['operation_sector'] = ' - '.join(values)
         
         self.get_dividends_history(response, stock_item)
-
-        yield FormRequest(
-            url='https://statusinvest.com.br/acao/getassetreports',
-            callback=self.get_management_reports,
-            formdata={
-                'year': str(datetime.now().year),
-                'code': stock_item['code']
-            },
-            meta={'stock_item': stock_item},
-            errback=self.error_handler,
-        )
+        
+        report_url = f'https://www.fundamentus.com.br/resultados_trimestrais.php?papel={stock_item["code"]}'
+        yield response.follow(report_url, callback=self.get_management_reports, meta={'stock_item': stock_item}, errback=self.error_handler)
 
 
     def get_dividends_history(self, response: Response, stock_item):
@@ -103,24 +94,15 @@ class StockScraperSpider(Spider):
 
     def get_management_reports(self, response: Response):
         stock_item = response.meta['stock_item']
-        reports = loads(response.text).get('data')
-        
-        needed_reports = []
 
-        for report in reports:
-            especies_of_interest = ['Dados Econômico-Financeiros', 'Comunicado ao Mercado']
-            if any(value in report.get('especie') for value in especies_of_interest):
-                report_type = report.get('tipo')
-                types_of_interest = ['Press-release', 'Apresentações', 'Análise Gerencial']
+        reports_table = response.css('table tbody tr:nth-child(1)')
 
-                if any(value in report_type for value in types_of_interest):
-                    needed_reports.append(report)
+        item = LastManagementReport()
+        item['link'] = reports_table.css('td:nth-child(3) a::attr(href)').get()
+        item['date'] = reports_table.css('td:nth-child(1) span::text').get()
 
-                elif 'Demonstrações Financeiras' in report_type:
-                    if 'Versão em português' in report.get('assunto'):
-                        needed_reports.append(report)
-        
-        stock_item['management_reports'] = needed_reports
+        stock_item['last_management_report'] = item
+        stock_item['reports_link'] = response.url
         yield stock_item
 
 
