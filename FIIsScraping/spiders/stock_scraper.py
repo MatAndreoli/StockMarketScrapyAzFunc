@@ -1,6 +1,3 @@
-from datetime import datetime
-from json import loads
-
 from scrapy import Spider
 from scrapy.responsetypes import Response
 
@@ -111,4 +108,5 @@ class StockScraperSpider(Spider):
         stock_item = request.meta['stock_item']
 
         self.logger.error(f"Error on {request.url}: {failure.value}")
+        stock_item['reports_link'] = request.url
         yield stock_item
