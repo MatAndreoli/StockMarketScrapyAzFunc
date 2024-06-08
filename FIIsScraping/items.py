@@ -30,6 +30,14 @@ class FiisScrapingItem(Item):
     rend_distribution = Field()
     last_management_report = Field()
 
+
+class DividendItem(Item):
+    type = Field()
+    data_com = Field()
+    pay_day = Field()
+    value = Field()
+
+
 class StockScrapingItem(Item):
     url = Field()
     name = Field()
@@ -46,3 +54,4 @@ class StockScrapingItem(Item):
     cagr = Field()
     roe = Field()
     total_stock_paper = Field()
+    dividends_history = Field()

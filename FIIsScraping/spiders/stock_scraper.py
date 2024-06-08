@@ -2,7 +2,7 @@ from scrapy import Spider
 from scrapy.responsetypes import Response
 
 from envs import STOCKS_FILE
-from FIIsScraping.items import StockScrapingItem
+from FIIsScraping.items import StockScrapingItem, DividendItem
 
 class StockScraperSpider(Spider):
     name = "stock-scraper"
@@ -58,5 +58,27 @@ class StockScraperSpider(Spider):
         values.append(about_company_table.xpath(xpath_code_sector.replace('%s', 'Setor')).get())
         values.append(about_company_table.xpath(xpath_code_sector.replace('%s', 'Segmento')).get())
         stock_item['operation_sector'] = ' - '.join(values)
+        
+        dividend_history = []
+        count = 0
+        dividends_rows = response.css('#table-dividends-history tbody tr')
+        for row in dividends_rows:
+            if count >= 10:
+                break
+            values = []
+            for cell in row.css('td'):
+                values.append(cell.css('::text').get())
+            count += 1
 
+            dividend_item = DividendItem()
+
+            dividend_item['type'] = values[0]
+            dividend_item['data_com'] = values[1]
+            dividend_item['pay_day'] = values[2]
+            dividend_item['value'] = str(round(float(values[3].strip().replace(',', '.')), 4))
+            
+            dividend_history.append(dividend_item)
+
+        stock_item['dividends_history'] = list(dividend_history)
+        
         yield stock_item
