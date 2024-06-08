@@ -1,5 +1,9 @@
+from datetime import datetime
+from json import loads
+
 from scrapy import Spider
 from scrapy.responsetypes import Response
+from scrapy.http import FormRequest
 
 from envs import STOCKS_FILE
 from FIIsScraping.items import StockScrapingItem, DividendItem
@@ -59,6 +63,21 @@ class StockScraperSpider(Spider):
         values.append(about_company_table.xpath(xpath_code_sector.replace('%s', 'Segmento')).get())
         stock_item['operation_sector'] = ' - '.join(values)
         
+        self.get_dividends_history(response, stock_item)
+
+        yield FormRequest(
+            url='https://statusinvest.com.br/acao/getassetreports',
+            callback=self.get_management_reports,
+            formdata={
+                'year': str(datetime.now().year),
+                'code': stock_item['code']
+            },
+            meta={'stock_item': stock_item},
+            errback=self.error_handler,
+        )
+
+
+    def get_dividends_history(self, response: Response, stock_item):
         dividend_history = []
         count = 0
         dividends_rows = response.css('#table-dividends-history tbody tr')
@@ -80,5 +99,34 @@ class StockScraperSpider(Spider):
             dividend_history.append(dividend_item)
 
         stock_item['dividends_history'] = list(dividend_history)
+
+
+    def get_management_reports(self, response: Response):
+        stock_item = response.meta['stock_item']
+        reports = loads(response.text).get('data')
         
+        needed_reports = []
+
+        for report in reports:
+            especies_of_interest = ['Dados Econômico-Financeiros', 'Comunicado ao Mercado']
+            if any(value in report.get('especie') for value in especies_of_interest):
+                report_type = report.get('tipo')
+                types_of_interest = ['Press-release', 'Apresentações', 'Análise Gerencial']
+
+                if any(value in report_type for value in types_of_interest):
+                    needed_reports.append(report)
+
+                elif 'Demonstrações Financeiras' in report_type:
+                    if 'Versão em português' in report.get('assunto'):
+                        needed_reports.append(report)
+        
+        stock_item['management_reports'] = needed_reports
+        yield stock_item
+
+
+    def error_handler(self, failure):
+        request = failure.request
+        stock_item = request.meta['stock_item']
+
+        self.logger.error(f"Error on {request.url}: {failure.value}")
         yield stock_item

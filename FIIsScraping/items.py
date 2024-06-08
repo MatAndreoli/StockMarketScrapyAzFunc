@@ -38,6 +38,12 @@ class DividendItem(Item):
     value = Field()
 
 
+class ManagementReport(Item):
+    link = Field()
+    date = Field()
+    type = Field()
+
+
 class StockScrapingItem(Item):
     url = Field()
     name = Field()
@@ -55,3 +61,4 @@ class StockScrapingItem(Item):
     roe = Field()
     total_stock_paper = Field()
     dividends_history = Field()
+    management_reports = Field()
