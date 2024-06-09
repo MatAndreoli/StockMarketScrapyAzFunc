@@ -35,28 +35,27 @@ class StockScraperSpider(Spider):
         stock_item['name'] = response.css('#header_action .name-ticker h2::text').get()
         stock_item['code'] = stock_item.get('url').split('/')[-2].upper()
 
-        cards_ticker = response.css('.container #cards-ticker')
-        stock_item['status'] = cards_ticker.css('.pl ._card-body div span::text').get()
-        stock_item['current_price'] = cards_ticker.css('.cotacao ._card-body div .value::text').get()
-        stock_item['p_l'] = cards_ticker.css('.val ._card-body span::text').get()
-        stock_item['p_vp'] = cards_ticker.css('.vp ._card-body span::text').get()
-        stock_item['dividend_yield'] = cards_ticker.css('.dy ._card-body span::text').get()
+        cards_xpath = '//div[div[contains(@class, "_card-header") and div/span[@title="%s"]]]/div[@class="_card-body"]//span/text()'
+        stock_item['status'] = response.xpath(self.replace_xpath(cards_xpath, 'VARIAÇÃO (12M)')).get()
+        stock_item['current_price'] = response.xpath(self.replace_xpath(cards_xpath, 'Cotação')).get()
+        stock_item['p_l'] = response.xpath(self.replace_xpath(cards_xpath, 'P/L')).get()
+        stock_item['p_vp'] = response.xpath(self.replace_xpath(cards_xpath, 'P/VP')).get()
+        stock_item['dividend_yield'] = response.xpath(self.replace_xpath(cards_xpath, 'DY')).get()
 
-        indicators_table = response.css('.content #container-multi-medias  #table-indicators ')
-        stock_item['roe'] = indicators_table.css('.cell:nth-child(20) > div.value span::text').get()
-        stock_item['net_debt_ebitda'] = indicators_table.css('.cell:nth-child(24) > div.value span::text').get()
-        stock_item['cagr'] = indicators_table.css('.cell:nth-child(31) > div.value span::text').get()
+        indicator_xpath = '//div[@id="table-indicators"]/div[@class="cell" and span[text()="%s "]]/div[contains(@class, "value")]/span/text()'
+        stock_item['roe'] = response.xpath(self.replace_xpath(indicator_xpath, 'ROE')).get()
+        stock_item['net_debt_ebitda'] = response.xpath(self.replace_xpath(indicator_xpath, 'DÍVIDA LÍQUIDA / EBITDA')).get()
+        stock_item['cagr'] = response.xpath(self.replace_xpath(indicator_xpath, 'CAGR LUCROS 5 ANOS')).get()
 
-        xpath_code = '//span[@class="title" and text()="%s"]/following-sibling::span//div[@class="simple-value"]/text()'
-        about_company_table = response.css('.container #about-company #info_about .content #table-indicators-company')
-        stock_item['average_daily'] = about_company_table.xpath(xpath_code.replace('%s', 'Liquidez Média Diária')).get()
-        stock_item['net_worth'] = about_company_table.xpath(xpath_code.replace('%s', 'Patrimônio Líquido')).get()
-        stock_item['total_stock_paper'] = about_company_table.xpath(xpath_code.replace('%s', 'Nº total de papeis')).get()
+        about_xpath = '//div[@id="table-indicators-company"]//span[@class="title" and text()="%s"]/following-sibling::span//div[@class="simple-value"]/text()'
+        stock_item['average_daily'] = response.xpath(self.replace_xpath(about_xpath, 'Liquidez Média Diária')).get()
+        stock_item['net_worth'] = response.xpath(self.replace_xpath(about_xpath, 'Patrimônio Líquido')).get()
+        stock_item['total_stock_paper'] = response.xpath(self.replace_xpath(about_xpath, 'Nº total de papeis')).get()
 
-        xpath_code_sector = '//a[span[@class="title" and text()="%s"]]//span[@class="value"]/text()'
+        xpath_code_sector = '//div[@id="table-indicators-company"]//a[span[@class="title" and text()="%s"]]//span[@class="value"]/text()'
         values = []
-        values.append(about_company_table.xpath(xpath_code_sector.replace('%s', 'Setor')).get())
-        values.append(about_company_table.xpath(xpath_code_sector.replace('%s', 'Segmento')).get())
+        values.append(response.xpath(self.replace_xpath(xpath_code_sector, 'Setor')).get())
+        values.append(response.xpath(self.replace_xpath(xpath_code_sector, 'Segmento')).get())
         stock_item['operation_sector'] = ' - '.join(values)
         
         self.get_dividends_history(response, stock_item)
@@ -110,3 +109,7 @@ class StockScraperSpider(Spider):
         self.logger.error(f"Error on {request.url}: {failure.value}")
         stock_item['reports_link'] = request.url
         yield stock_item
+
+
+    def replace_xpath(self, xpath_code, value):
+        return xpath_code.replace('%s', value)
