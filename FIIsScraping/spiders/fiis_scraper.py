@@ -70,11 +70,28 @@ class FiisScraperSpider(Spider):
             rend_distribution['data_com'] = last_rend_distribution[0].css('ul li:nth-child(1) b::text').get()
             fii_item['rend_distribution'] = dict(rend_distribution)
 
-        last_management_report_el = response.xpath("//div[contains(@class, 'communicated__grid__row') and contains(a/@href, 'https://fnet.bmfbovespa.com.br/fnet/publico/exibirDocumento?id=') and contains(a/text(), 'Gerencial')]") or None
+        report_url = f'https://www.fundamentus.com.br/fii_relatorios.php?papel={fii_item["code"]}'
+        yield response.follow(report_url, callback=self.get_management_reports, meta={'fii_item': fii_item}, errback=self.error_handler)
 
-        if last_management_report_el is not None:
-            last_management_report['link'] = last_management_report_el[0].css('a::attr(href)').get()
-            last_management_report['date'] = last_management_report_el[0].css('p::text').get()
-            fii_item['last_management_report'] = dict(last_management_report)
 
+    def get_management_reports(self, response: Response):
+        fii_item = response.meta['fii_item']
+
+        reports_table = response.css('table tbody tr:nth-child(1)')
+
+        item = LastManagementReport()
+        item['date'] = reports_table.css('td:nth-child(1) span::text').get()
+        item['link'] = reports_table.css('td:nth-child(2) a::attr(href)').get()
+
+        fii_item['last_management_report'] = dict(item)
+        fii_item['reports_link'] = response.url
+        yield fii_item
+
+
+    def error_handler(self, failure):
+        request = failure.request
+        fii_item = request.meta['fii_item']
+
+        self.logger.error(f"Error on {request.url}: {failure.value}")
+        fii_item['reports_link'] = request.url
         yield fii_item

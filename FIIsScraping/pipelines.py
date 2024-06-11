@@ -1,5 +1,6 @@
 import re
 from itemadapter import ItemAdapter
+from urllib.parse import urlparse, parse_qs, urlencode, urlunparse
 
 
 class FiisScrapingPipeline:
@@ -19,6 +20,10 @@ class FiisScrapingPipeline:
 
             elif field_type is dict:
                 strip_dict_values(adapter.get(field))
+
+            if field == 'last_management_report':
+                if report_link := adapter.get('last_management_report').get('link'):
+                    adapter['last_management_report']['link'] = report_link.replace('downloadDocumento', 'exibirDocumento')
 
             if field == 'dividend_yield':
                 adapter[field] += '%'
@@ -70,7 +75,26 @@ class StocksScrapingPipeline:
 
             if field in ['current_price', 'average_daily', 'net_worth']:
                 adapter[field] = adapter.get(field)
-            
+
+
+            if field == 'last_management_report':
+                if report_link := adapter.get('last_management_report').get('link'):
+                    parsed_url = urlparse(report_link.replace('frmDownloadDocumento', 'frmExibirArquivoIPEExterno'))
+                    query_params = parse_qs(parsed_url.query)
+                    new_query_params = {
+                        'NumeroProtocoloEntrega': int(query_params['numProtocolo'][0])
+                    }
+                    new_query_string = urlencode(new_query_params)
+                    new_url = urlunparse((
+                        parsed_url.scheme,
+                        parsed_url.netloc,
+                        parsed_url.path,
+                        parsed_url.params,
+                        new_query_string,
+                        parsed_url.fragment
+                    ))
+                    adapter['last_management_report']['link'] = new_url 
+
         return item
 
 def strip_dict_values(dict):

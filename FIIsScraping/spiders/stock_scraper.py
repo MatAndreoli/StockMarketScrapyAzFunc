@@ -94,8 +94,8 @@ class StockScraperSpider(Spider):
         reports_table = response.css('table tbody tr:nth-child(1)')
 
         item = LastManagementReport()
-        item['link'] = reports_table.css('td:nth-child(3) a::attr(href)').get()
         item['date'] = reports_table.css('td:nth-child(1) span::text').get()
+        item['link'] = reports_table.css('td:nth-child(3) a::attr(href)').get()
 
         stock_item['last_management_report'] = item
         stock_item['reports_link'] = response.url

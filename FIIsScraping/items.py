@@ -29,6 +29,7 @@ class FiisScrapingItem(Item):
     last_dividend_table = Field()
     rend_distribution = Field()
     last_management_report = Field()
+    reports_link = Field()
 
 
 class DividendItem(Item):
