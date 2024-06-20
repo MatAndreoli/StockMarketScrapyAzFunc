@@ -22,7 +22,7 @@ class FiisScrapingPipeline:
                 strip_dict_values(adapter.get(field))
 
             if field == 'last_management_report':
-                if report_link := adapter.get('last_management_report').get('link'):
+                if report_link := adapter.get('last_management_report', {}).get('link', ''):
                     adapter['last_management_report']['link'] = report_link.replace('downloadDocumento', 'exibirDocumento')
 
             if field == 'dividend_yield':
@@ -78,7 +78,7 @@ class StocksScrapingPipeline:
 
 
             if field == 'last_management_report':
-                if report_link := adapter.get('last_management_report').get('link'):
+                if report_link := adapter.get('last_management_report', {}).get('link', ''):
                     parsed_url = urlparse(report_link.replace('frmDownloadDocumento', 'frmExibirArquivoIPEExterno'))
                     query_params = parse_qs(parsed_url.query)
                     new_query_params = {
