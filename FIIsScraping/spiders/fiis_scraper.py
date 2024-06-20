@@ -29,7 +29,7 @@ class FiisScraperSpider(Spider):
     def parse(self, response: Response):
         for fii in self.fiis.split(','):
 
-            url = f'https://www.fundsexplorer.com.br/funds/{fii}'
+            url = f'https://www.fundsexplorer.com.br/funds/{fii.lower()}'
             type_css = f'.link-tickers-container[onclick="location.href=\'{url}\';"] span::text'
             fii_type = response.css(type_css).get()
 
