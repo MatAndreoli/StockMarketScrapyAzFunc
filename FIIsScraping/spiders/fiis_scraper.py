@@ -28,8 +28,7 @@ class FiisScraperSpider(Spider):
 
     def parse(self, response: Response):
         for fii in self.fiis.split(','):
-
-            url = f'https://www.fundsexplorer.com.br/funds/{fii.lower()}'
+            url = f'https://www.fundsexplorer.com.br/funds/{fii.lower()}/'
             type_css = f'.link-tickers-container[onclick="location.href=\'{url}\';"] span::text'
             fii_type = response.css(type_css).get()
 
@@ -50,19 +49,19 @@ class FiisScraperSpider(Spider):
         fii_item['code'] = response.css('.headerTicker__content__title::text').get()
         fii_item['status'] = response.css('.headerTicker__content__price span::text').get()
         fii_item['current_price'] = response.css('.headerTicker__content__price p::text').get()
-        
+
         fii_data = response.css('.indicators:nth-child(1)')
         fii_item['average_daily'] = fii_data.css('.indicators__box:nth-child(1) p b::text').get()
         fii_item['last_dividend'] = fii_data.css('.indicators__box:nth-child(2) p b::text').get()
         fii_item['dividend_yield'] = fii_data.css('.indicators__box:nth-child(3) p b::text').get()
         fii_item['net_worth'] = fii_data.css('.indicators__box:nth-child(4) p:nth-child(2) b').get()
         fii_item['p_vp'] = fii_data.css('.indicators__box:nth-child(7) p b::text').get()
-        
+
         fii_historic_data = response.css('.historic')
         fii_item['last_dividend_yield'] = fii_historic_data.css('div:nth-child(2) p:nth-child(2) b::text').get()
 
         last_rend_distribution = response.css('.communicated .communicated__grid .communicated__grid__rend') or None
-        
+
         if last_rend_distribution is not None:
             rend_distribution['dividend'] = last_rend_distribution[0].css('p::text').get()
             rend_distribution['future_pay_day'] = last_rend_distribution[0].css('p::text').get()
