@@ -97,12 +97,12 @@ class StocksScrapingPipeline:
 
         return item
 
-def strip_dict_values(dict):
-    for key in dict.keys():
-        dict[key] = dict.get(key).strip()
+def strip_dict_values(dict_item):
+    for key in dict_item.keys():
+        dict_item[key] = dict_item.get(key).strip()
         if key == 'dividend':
-            dict[key] = re.findall('R\$\s[\d+]+\,\d+', dict[key])[0]
+            dict_item[key] = re.findall('R\$\s[\d+]+\,\d+', dict_item[key])[0]
         if key == 'future_pay_day':
-            dict[key] = re.findall('(\d+\/\d+\/\d+)+', dict[key])[0]
+            dict_item[key] = re.findall('(\d+\/\d+\/\d+)+', dict_item[key])[0]
         if key == 'date':
-            dict[key] = '/'.join(re.split('[\/|\.]', dict.get(key).split(' ')[-1]))
+            dict_item[key] = '/'.join(re.split('[\/|\.]', dict_item.get(key).split(' ')[-1]))

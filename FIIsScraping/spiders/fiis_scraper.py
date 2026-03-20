@@ -28,7 +28,7 @@ class FiisScraperSpider(Spider):
 
     def parse(self, response: Response):
         for fii in self.fiis.split(','):
-            url = f'https://www.fundsexplorer.com.br/funds/{fii.lower()}/'
+            url = f'https://www.fundsexplorer.com.br/funds/{fii.lower()}'
             type_css = f'.link-tickers-container[onclick="location.href=\'{url}\';"] span::text'
             fii_type = response.css(type_css).get()
 
@@ -47,7 +47,10 @@ class FiisScraperSpider(Spider):
 
         fii_item['name'] = response.css('.headerTicker__content__name::text').get()
         fii_item['code'] = response.css('.headerTicker__content__title::text').get()
-        fii_item['status'] = response.css('.headerTicker__content__price span::text').get()
+        status_box = response.css('#carbon_fields_fiis_quotations-2 .quotationSimulation div[class*="quotation__grid__box"]:nth-child(4)')
+        status_value = status_box.css('p::text').get('').strip()
+        is_baixa = 'baixa' in (status_box.attrib.get('class', ''))
+        fii_item['status'] = f'-{status_value}' if is_baixa else status_value
         fii_item['current_price'] = response.css('.headerTicker__content__price p::text').get()
 
         fii_data = response.css('.indicators:nth-child(1)')
