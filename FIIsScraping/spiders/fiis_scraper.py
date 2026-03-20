@@ -48,7 +48,7 @@ class FiisScraperSpider(Spider):
         fii_item['name'] = response.css('.headerTicker__content__name::text').get()
         fii_item['code'] = response.css('.headerTicker__content__title::text').get()
         status_box = response.css('#carbon_fields_fiis_quotations-2 .quotationSimulation div[class*="quotation__grid__box"]:nth-child(4)')
-        status_value = status_box.css('p::text').get('').strip()
+        status_value = ''.join(status_box.css('p:nth-child(1) ::text').getall()).strip().replace(' ', '')
         is_baixa = 'baixa' in (status_box.attrib.get('class', ''))
         fii_item['status'] = f'-{status_value}' if is_baixa else status_value
         fii_item['current_price'] = response.css('.headerTicker__content__price p::text').get()
