@@ -1,6 +1,6 @@
 # StockMarketScrapyAzFunc
 
-Azure Function that scrapes financial data from the Brazilian stock market using [Scrapy](https://scrapy.org/). Exposes HTTP endpoints to fetch real-time information about **FIIs** (Fundos de Investimento Imobiliário) and **Stocks**.
+Multi-cloud serverless application (Azure Functions & AWS Lambda) that scrapes financial data from the Brazilian stock market using [Scrapy](https://scrapy.org/). Exposes HTTP endpoints to fetch real-time information about **FIIs** (Fundos de Investimento Imobiliário) and **Stocks**.
 
 ## Data Sources
 
@@ -12,10 +12,13 @@ Azure Function that scrapes financial data from the Brazilian stock market using
 ## Project Structure
 
 ```
-├── function_app.py          # Azure Function entry point (HTTP routes)
+├── core/handler.py          # Platform-agnostic business logic
+├── function_app.py          # Azure Functions entry point (HTTP routes)
+├── lambda_handler.py        # AWS Lambda entry point
 ├── envs.py                  # Environment configuration
 ├── scrapy.cfg               # Scrapy project config
 ├── requirements.txt         # Python dependencies
+├── template.yaml            # AWS SAM deployment template
 ├── host.json                # Azure Functions host config
 ├── local.settings.json      # Local dev settings
 └── FIIsScraping/
@@ -31,7 +34,7 @@ Azure Function that scrapes financial data from the Brazilian stock market using
 
 ## Tech Stack
 
-- **Runtime**: Azure Functions v2 (Python)
+- **Runtime**: Azure Functions v2 / AWS Lambda (Python 3.12)
 - **Scraping**: Scrapy 2.11 + Twisted
 - **Anti-detection**: scrapy-fake-useragent
 
@@ -113,14 +116,25 @@ curl "http://localhost:7071/api/stocks?stocks=ITSA3,PETR4"
 ]
 ```
 
-## Deploy to Azure
+## Deployment
+
+### Azure Functions
 
 ```bash
 func azure functionapp publish <function_app_name> --build remote --publish-local-settings
+```
+
+### AWS Lambda
+
+Deploy using AWS SAM:
+
+```bash
+sam build
+sam deploy --guided
 ```
 
 ## Environment Variables
 
 | Variable | Description | Default |
 |----------|-------------|---------|
-| `RUN_ENV` | Set to `azure` to write data files to `/tmp/` | `""` (writes to project root) |
+| `RUN_ENV` | Set to `azure` or `aws` to write data files to `/tmp/` | `""` (writes to project root) |

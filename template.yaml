@@ -1,0 +1,35 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: FIIs and Stocks Scraping Lambda Function
+
+Globals:
+  Function:
+    Timeout: 120
+    MemorySize: 512
+    Runtime: python3.12
+    Environment:
+      Variables:
+        RUN_ENV: aws
+
+Resources:
+  ScrapingFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: lambda_handler.lambda_handler
+      CodeUri: .
+      Events:
+        GetFiis:
+          Type: HttpApi
+          Properties:
+            Path: /fiis
+            Method: get
+        GetStocks:
+          Type: HttpApi
+          Properties:
+            Path: /stocks
+            Method: get
+
+Outputs:
+  ApiUrl:
+    Description: API Gateway endpoint URL
+    Value: !Sub "https://${ServerlessHttpApi}.execute-api.${AWS::Region}.amazonaws.com"
